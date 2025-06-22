@@ -92,6 +92,11 @@ if uploaded_file and coord_file:
         st.markdown(" → ".join(best_named_path))
         st.markdown(f"**Total Distance:** `{round(best_cost, 3)} km`")
 
+        # Show error if no path is found
+        if not best_named_path:
+            st.error("❌ No valid path found from start to end. Try different nodes or increase iterations/ants.")
+            st.stop()
+        
         # Visualize on map
         path_coords = [coords_dict[name] for name in best_named_path]
         start_lat, start_lon = path_coords[0]
