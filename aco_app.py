@@ -131,7 +131,7 @@ if uploaded_file and coord_file:
         )
 
 # Set Mapbox token (REQUIRED for map styles like streets/satellite/outdoors)
-pdk.settings.mapbox_api_key = "pk.eyJ1Ijoia2FtaXkiLCJhIjoiY21jN3p3bGkxMHF5dTJtbjVnZWRoZ21ybCJ9.a_uMfg1RsYTuXh5N5C3AXA"  
+pdk.settings.mapbox_api_key = "pk.eyJ1Ijoia2FtaXkiLCJhIjoiY21jN3p3bGkxMHF5dTJtbjVnZWRoZ21ybCJ9.a_uMfg1RsYTuXh5N5C3AXA-token"  
         
         mid_lat, mid_lon = path_coords[0]
         st.pydeck_chart(pdk.Deck(
