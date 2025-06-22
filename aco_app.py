@@ -74,4 +74,4 @@ if uploaded_file:
         best_named_path = [nodes[i] for i in best_path]
         st.success("Best Path Found:")
         st.write(" → ".join(best_named_path))
-        st.write(f"Total Distance: {round(best_cost, 3)} km")
+        st.write(f"Total Distance: {round(best_cost, 3)} km")
