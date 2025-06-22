@@ -132,7 +132,7 @@ if uploaded_file and coord_file:
 
         mid_lat, mid_lon = path_coords[0]
         st.pydeck_chart(pdk.Deck(
-            map_style="mapbox://styles/mapbox/streets-v11",
+            map_style="mapbox://styles/mapbox/outdoors-v12",
             initial_view_state=pdk.ViewState(
                 latitude=mid_lat,
                 longitude=mid_lon,
