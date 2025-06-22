@@ -21,7 +21,7 @@ if uploaded_file and coord_file:
     distance_matrix.columns = distance_matrix.columns.str.strip()
     distance_matrix.index = distance_matrix.index.str.strip()
     coordinates.columns = coordinates.columns.str.strip()
-    coordinates["Building"] = coordinates["Building"].str.strip()
+    coordinates["name"] = coordinates["name"].str.strip()
 
     # Prepare node info
     nodes = list(distance_matrix.index)
