@@ -117,11 +117,11 @@ if uploaded_file and coord_file:
             ).add_to(m)
 
         # Add map controls
-        folium.TileLayer('Stamen Terrain').add_to(m)
-        folium.TileLayer('Stamen Toner').add_to(m)
-        folium.TileLayer('CartoDB positron').add_to(m)
-        folium.TileLayer('CartoDB dark_matter').add_to(m)
-        folium.LayerControl().add_to(m)
+        folium.TileLayer('Stamen Terrain', attr='Map tiles by Stamen Design').add_to(m)
+        folium.TileLayer('Stamen Toner', attr='Map tiles by Stamen Design').add_to(m)
+        folium.TileLayer('CartoDB positron', attr='©OpenStreetMap, ©CartoDB').add_to(m)
+        folium.TileLayer('CartoDB dark_matter', attr='©OpenStreetMap, ©CartoDB').add_to(m)
+
 
         # Display map
         st_data = st_folium(m, width=900, height=550)
