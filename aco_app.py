@@ -19,11 +19,12 @@ if uploaded_file and coord_file:
     distance_matrix = load_csv(uploaded_file)
     coordinates = load_csv(coord_file)
 
-    # Clean whitespace in headers and values
-    distance_matrix.columns = distance_matrix.columns.str.strip()
-    distance_matrix.index = distance_matrix.index.str.strip()
-    coordinates.columns = coordinates.columns.str.strip()
-    coordinates["name"] = coordinates["name"].str.strip()
+    # Clean whitespace in headers and index
+    distance_matrix.columns = distance_matrix.columns.map(str).str.strip()
+    distance_matrix.index = distance_matrix.index.map(str).str.strip()
+    coordinates.columns = coordinates.columns.map(str).str.strip()
+    coordinates["name"] = coordinates["name"].astype(str).str.strip()
+
 
     # Prepare node info
     nodes = list(distance_matrix.index)
