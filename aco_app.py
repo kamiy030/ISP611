@@ -1,41 +1,50 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import pydeck as pdk
+import random
+import folium
+from streamlit_folium import st_folium
 
-# --- ACO PARAMETERS ---
-st.title("📍 Campus Navigation Optimizer using ACO")
+st.set_page_config(layout="wide")
+st.title("📍 Campus Navigation Optimizer using ACO and Real Map")
 
-# Upload CSV files
+# --- Upload CSV Files ---
 uploaded_file = st.file_uploader("Upload Distance Matrix CSV (in km)", type=["csv"])
 coord_file = st.file_uploader("Upload Coordinates CSV (Building, Latitude, Longitude)", type=["csv"])
 
 if uploaded_file and coord_file:
+    # Load distance and coordinates
     distance_matrix = pd.read_csv(uploaded_file, index_col=0)
     coordinates = pd.read_csv(coord_file)
 
+    # Clean whitespace in headers and values
+    distance_matrix.columns = distance_matrix.columns.str.strip()
+    distance_matrix.index = distance_matrix.index.str.strip()
+    coordinates.columns = coordinates.columns.str.strip()
+    coordinates["Building"] = coordinates["Building"].str.strip()
+
+    # Prepare node info
     nodes = list(distance_matrix.index)
     n_nodes = len(nodes)
 
-    st.success(f"Loaded distance matrix with {n_nodes} buildings.")
+    st.success(f"✅ Loaded {n_nodes} locations")
 
-    # User input for ACO
-    start_node = st.selectbox("Start from", nodes, index=0)
-    end_node = st.selectbox("End at", nodes, index=1)
+    # User inputs for ACO
+    start_node = st.selectbox("Start Location", nodes, index=0)
+    end_node = st.selectbox("End Location", nodes, index=1)
     n_ants = st.slider("Number of Ants", 5, 50, 10)
     n_iterations = st.slider("Number of Iterations", 10, 100, 50)
     alpha = st.slider("Alpha (pheromone importance)", 0.1, 5.0, 1.0)
     beta = st.slider("Beta (heuristic importance)", 0.1, 5.0, 2.0)
     evaporation = st.slider("Pheromone evaporation rate", 0.0, 1.0, 0.5)
 
-    if st.button("Run ACO Optimization"):
+    if st.button("🚀 Run ACO Optimization"):
         dist = distance_matrix.values
         pheromone = np.ones((n_nodes, n_nodes))
         best_cost = float("inf")
         best_path = []
 
-        # Coordinate lookup dictionary
-        coords_dict = dict(zip(coordinates["name"], zip(coordinates["lat"], coordinates["lon"])))
+        coords_dict = dict(zip(coordinates["Building"], zip(coordinates["Latitude"], coordinates["Longitude"])))
 
         def select_next_node(visited, current):
             probabilities = []
@@ -50,16 +59,16 @@ if uploaded_file and coord_file:
             probabilities = [p / total if total > 0 else 0 for p in probabilities]
             return np.random.choice(range(n_nodes), p=probabilities)
 
-        for iteration in range(n_iterations):
+        for _ in range(n_iterations):
             all_paths = []
             all_costs = []
-            for ant in range(n_ants):
+            for _ in range(n_ants):
                 start_index = nodes.index(start_node)
                 end_index = nodes.index(end_node)
                 path = [start_index]
                 while path[-1] != end_index:
                     next_node = select_next_node(path, path[-1])
-                    if next_node in path:  # avoid loops
+                    if next_node in path:
                         break
                     path.append(next_node)
                 if path[-1] != end_index:
@@ -72,66 +81,47 @@ if uploaded_file and coord_file:
                     best_cost = cost
                     best_path = path
 
-            # Update pheromone
+            # Update pheromones
             pheromone *= (1 - evaporation)
             for path, cost in zip(all_paths, all_costs):
                 for i in range(len(path) - 1):
                     pheromone[path[i]][path[i + 1]] += 1.0 / cost
 
         best_named_path = [nodes[i] for i in best_path]
-        st.success("✅ Best Path Found:")
-        st.write(" → ".join(best_named_path))
-        st.write(f"Total Distance: {round(best_cost, 3)} km")
+        st.success("✅ Best Route Found:")
+        st.markdown(" → ".join(best_named_path))
+        st.markdown(f"**Total Distance:** `{round(best_cost, 3)} km`")
 
-        # Extract coordinates for best path
+        # Visualize on map
         path_coords = [coords_dict[name] for name in best_named_path]
+        start_lat, start_lon = path_coords[0]
 
-        # Calculate mid-point for view
-        mid_lat = np.mean([lat for lat, lon in path_coords])
-        mid_lon = np.mean([lon for lat, lon in path_coords])
-        
-        # Route Line Layer (with arrows)
-        line_layer = pdk.Layer(
-            "PathLayer",
-            data=[{
-                "path": [(lon, lat) for lat, lon in path_coords],
-                "name": "ACO Path"
-            }],
-            get_path="path",
-            get_width=5,
-            get_color=[255, 0, 0],
-            width_min_pixels=4,
-            width_scale=1,
-            pickable=True
-        )
-        
-        # Marker Layer for Start and End
-        marker_data = pd.DataFrame([
-            {"lat": path_coords[0][0], "lon": path_coords[0][1], "label": "Start"},
-            {"lat": path_coords[-1][0], "lon": path_coords[-1][1], "label": "End"},
-        ])
-        
-        marker_layer = pdk.Layer(
-            "TextLayer",
-            data=marker_data,
-            pickable=True,
-            get_position='[lon, lat]',
-            get_text='label',
-            get_color=[0, 255, 0],
-            get_size=16,
-            get_alignment_baseline='"bottom"'
-        )
-        
-        # Display updated map
-        st.pydeck_chart(pdk.Deck(
-            map_style='mapbox://styles/mapbox/streets-v12',  # 🎯 More map-like style
-            initial_view_state=pdk.ViewState(
-                latitude=mid_lat,
-                longitude=mid_lon,
-                zoom=17,
-                pitch=45,
-                bearing=0
-            ),
-            layers=[line_layer, marker_layer],
-            tooltip={"text": "{label}"}
-        ))
+        m = folium.Map(location=[start_lat, start_lon], zoom_start=17)
+
+        # Add start and end markers
+        folium.Marker(location=path_coords[0], popup="Start", icon=folium.Icon(color="green")).add_to(m)
+        folium.Marker(location=path_coords[-1], popup="End", icon=folium.Icon(color="red")).add_to(m)
+
+        # Draw path line
+        folium.PolyLine(path_coords, color="red", weight=5, tooltip="Shortest Path").add_to(m)
+
+        # Add all building markers
+        for name, (lat, lon) in coords_dict.items():
+            folium.CircleMarker(
+                location=(lat, lon),
+                radius=3,
+                color="blue",
+                fill=True,
+                fill_opacity=0.6,
+                popup=name
+            ).add_to(m)
+
+        # Add map controls
+        folium.TileLayer('Stamen Terrain').add_to(m)
+        folium.TileLayer('Stamen Toner').add_to(m)
+        folium.TileLayer('CartoDB positron').add_to(m)
+        folium.TileLayer('CartoDB dark_matter').add_to(m)
+        folium.LayerControl().add_to(m)
+
+        # Display map
+        st_data = st_folium(m, width=900, height=550)
