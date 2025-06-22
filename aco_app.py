@@ -116,9 +116,7 @@ if uploaded_file and coord_file:
                 popup=name
             ).add_to(m)
 
-        # Add map controls
-        # Use only the default OpenStreetMap tiles
-        # OR specify a clean tile:
+        
         folium.TileLayer('OpenStreetMap').add_to(m)
 
 
