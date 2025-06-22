@@ -122,6 +122,5 @@ if uploaded_file and coord_file:
         folium.TileLayer('CartoDB positron', attr='©OpenStreetMap, ©CartoDB').add_to(m)
         folium.TileLayer('CartoDB dark_matter', attr='©OpenStreetMap, ©CartoDB').add_to(m)
 
-
         # Display map
         st_data = st_folium(m, width=900, height=550)
