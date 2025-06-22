@@ -8,14 +8,16 @@ from streamlit_folium import st_folium
 st.set_page_config(layout="wide")
 st.title("📍 Campus Navigation Optimizer using ACO and Real Map")
 
-# --- Upload CSV Files ---
+@st.cache_data
+def load_csv(file):
+    return pd.read_csv(file)
+
 uploaded_file = st.file_uploader("Upload Distance Matrix CSV (in km)", type=["csv"])
 coord_file = st.file_uploader("Upload Coordinates CSV (Building, Latitude, Longitude)", type=["csv"])
 
 if uploaded_file and coord_file:
-    # Load distance and coordinates
-    distance_matrix = pd.read_csv(uploaded_file, index_col=0)
-    coordinates = pd.read_csv(coord_file)
+    distance_matrix = load_csv(uploaded_file)
+    coordinates = load_csv(coord_file)
 
     # Clean whitespace in headers and values
     distance_matrix.columns = distance_matrix.columns.str.strip()
