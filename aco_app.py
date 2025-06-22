@@ -1,15 +1,19 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import random
+import pydeck as pdk
 
 # --- ACO PARAMETERS ---
 st.title("📍 Campus Navigation Optimizer using ACO")
 
+# Upload CSV files
 uploaded_file = st.file_uploader("Upload Distance Matrix CSV (in km)", type=["csv"])
+coord_file = st.file_uploader("Upload Coordinates CSV (Building, Latitude, Longitude)", type=["csv"])
 
-if uploaded_file:
+if uploaded_file and coord_file:
     distance_matrix = pd.read_csv(uploaded_file, index_col=0)
+    coordinates = pd.read_csv(coord_file)
+
     nodes = list(distance_matrix.index)
     n_nodes = len(nodes)
 
@@ -29,6 +33,9 @@ if uploaded_file:
         pheromone = np.ones((n_nodes, n_nodes))
         best_cost = float("inf")
         best_path = []
+
+        # Coordinate lookup dictionary
+        coords_dict = dict(zip(coordinates["Building"], zip(coordinates["Latitude"], coordinates["Longitude"])))
 
         def select_next_node(visited, current):
             probabilities = []
@@ -72,6 +79,54 @@ if uploaded_file:
                     pheromone[path[i]][path[i + 1]] += 1.0 / cost
 
         best_named_path = [nodes[i] for i in best_path]
-        st.success("Best Path Found:")
+        st.success("✅ Best Path Found:")
         st.write(" → ".join(best_named_path))
         st.write(f"Total Distance: {round(best_cost, 3)} km")
+
+        # Extract coordinates for best path
+        path_coords = [coords_dict[name] for name in best_named_path]
+
+        # Data for lines
+        line_data = pd.DataFrame({
+            "from_lat": [path_coords[i][0] for i in range(len(path_coords)-1)],
+            "from_lon": [path_coords[i][1] for i in range(len(path_coords)-1)],
+            "to_lat": [path_coords[i+1][0] for i in range(len(path_coords)-1)],
+            "to_lon": [path_coords[i+1][1] for i in range(len(path_coords)-1)],
+        })
+
+        # Data for markers
+        marker_data = pd.DataFrame([
+            {"lat": lat, "lon": lon, "name": name} 
+            for name, (lat, lon) in coords_dict.items()
+        ])
+
+        # Layers for path and markers
+        line_layer = pdk.Layer(
+            "LineLayer",
+            data=line_data,
+            get_source_position='[from_lon, from_lat]',
+            get_target_position='[to_lon, to_lat]',
+            get_width=4,
+            get_color=[255, 0, 0],
+            pickable=True
+        )
+
+        marker_layer = pdk.Layer(
+            "ScatterplotLayer",
+            data=marker_data,
+            get_position='[lon, lat]',
+            get_radius=6,
+            get_fill_color=[0, 0, 255],
+            pickable=True
+        )
+
+        # Center view
+        mid_lat, mid_lon = path_coords[0]
+
+        # Show map
+        st.pydeck_chart(pdk.Deck(
+            map_style='mapbox://styles/mapbox/light-v9',
+            initial_view_state=pdk.ViewState(latitude=mid_lat, longitude=mid_lon, zoom=17),
+            layers=[line_layer, marker_layer],
+            tooltip={"text": "{name}"}
+        ))
