@@ -86,47 +86,52 @@ if uploaded_file and coord_file:
         # Extract coordinates for best path
         path_coords = [coords_dict[name] for name in best_named_path]
 
-        # Data for lines
-        line_data = pd.DataFrame({
-            "from_lat": [path_coords[i][0] for i in range(len(path_coords)-1)],
-            "from_lon": [path_coords[i][1] for i in range(len(path_coords)-1)],
-            "to_lat": [path_coords[i+1][0] for i in range(len(path_coords)-1)],
-            "to_lon": [path_coords[i+1][1] for i in range(len(path_coords)-1)],
-        })
-
-        # Data for markers
-        marker_data = pd.DataFrame([
-            {"lat": lat, "lon": lon, "name": name} 
-            for name, (lat, lon) in coords_dict.items()
-        ])
-
-        # Layers for path and markers
+        # Calculate mid-point for view
+        mid_lat = np.mean([lat for lat, lon in path_coords])
+        mid_lon = np.mean([lon for lat, lon in path_coords])
+        
+        # Route Line Layer (with arrows)
         line_layer = pdk.Layer(
-            "LineLayer",
-            data=line_data,
-            get_source_position='[from_lon, from_lat]',
-            get_target_position='[to_lon, to_lat]',
-            get_width=4,
+            "PathLayer",
+            data=[{
+                "path": [(lon, lat) for lat, lon in path_coords],
+                "name": "ACO Path"
+            }],
+            get_path="path",
+            get_width=5,
             get_color=[255, 0, 0],
+            width_min_pixels=4,
+            width_scale=1,
             pickable=True
         )
-
+        
+        # Marker Layer for Start and End
+        marker_data = pd.DataFrame([
+            {"lat": path_coords[0][0], "lon": path_coords[0][1], "label": "Start"},
+            {"lat": path_coords[-1][0], "lon": path_coords[-1][1], "label": "End"},
+        ])
+        
         marker_layer = pdk.Layer(
-            "ScatterplotLayer",
+            "TextLayer",
             data=marker_data,
+            pickable=True,
             get_position='[lon, lat]',
-            get_radius=6,
-            get_fill_color=[0, 0, 255],
-            pickable=True
+            get_text='label',
+            get_color=[0, 255, 0],
+            get_size=16,
+            get_alignment_baseline='"bottom"'
         )
-
-        # Center view
-        mid_lat, mid_lon = path_coords[0]
-
-        # Show map
+        
+        # Display updated map
         st.pydeck_chart(pdk.Deck(
-            map_style='mapbox://styles/mapbox/light-v9',
-            initial_view_state=pdk.ViewState(latitude=mid_lat, longitude=mid_lon, zoom=17),
+            map_style='mapbox://styles/mapbox/streets-v12',  # 🎯 More map-like style
+            initial_view_state=pdk.ViewState(
+                latitude=mid_lat,
+                longitude=mid_lon,
+                zoom=17,
+                pitch=45,
+                bearing=0
+            ),
             layers=[line_layer, marker_layer],
-            tooltip={"text": "{name}"}
+            tooltip={"text": "{label}"}
         ))
