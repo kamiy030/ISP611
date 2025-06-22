@@ -97,33 +97,34 @@ if uploaded_file and coord_file:
             st.error("❌ No valid path found from start to end. Try different nodes or increase iterations/ants.")
             st.stop()
         
-        # Visualize on map
-        path_coords = [coords_dict[name] for name in best_named_path]
-        start_lat, start_lon = path_coords[0]
-
-        m = folium.Map(location=[start_lat, start_lon], zoom_start=17)
-
-        # Add start and end markers
-        folium.Marker(location=path_coords[0], popup="Start", icon=folium.Icon(color="green")).add_to(m)
-        folium.Marker(location=path_coords[-1], popup="End", icon=folium.Icon(color="red")).add_to(m)
-
-        # Draw path line
-        folium.PolyLine(path_coords, color="red", weight=5, tooltip="Shortest Path").add_to(m)
-
-        # Add all building markers
-        for name, (lat, lon) in coords_dict.items():
-            folium.CircleMarker(
-                location=(lat, lon),
-                radius=3,
-                color="blue",
-                fill=True,
-                fill_opacity=0.6,
-                popup=name
-            ).add_to(m)
-
+       # --- Visualize path on map ---
+        try:
+            path_coords = [coords_dict[name] for name in best_named_path]
+            start_lat, start_lon = path_coords[0]
         
-        folium.TileLayer('OpenStreetMap').add_to(m)
-
-
-        # Display map
-        st_data = st_folium(m, width=900, height=550)
+            m = folium.Map(location=[start_lat, start_lon], zoom_start=17)
+        
+            # Add route markers
+            folium.Marker(location=path_coords[0], popup="Start", icon=folium.Icon(color="green")).add_to(m)
+            folium.Marker(location=path_coords[-1], popup="End", icon=folium.Icon(color="red")).add_to(m)
+        
+            # Draw polyline
+            folium.PolyLine(path_coords, color="red", weight=5, tooltip="Optimized Path").add_to(m)
+        
+            # Add all building markers
+            for name, (lat, lon) in coords_dict.items():
+                folium.CircleMarker(
+                    location=(lat, lon),
+                    radius=4,
+                    color="blue",
+                    fill=True,
+                    fill_opacity=0.6,
+                    popup=name
+                ).add_to(m)
+        
+            # Display map
+            st_data = st_folium(m, width=900, height=550)
+        
+        except Exception as e:
+            st.error(f"⚠️ Error displaying map: {e}")
+            st.stop()
