@@ -35,7 +35,7 @@ if uploaded_file and coord_file:
         best_path = []
 
         # Coordinate lookup dictionary
-        coords_dict = dict(zip(coordinates["Building"], zip(coordinates["Latitude"], coordinates["Longitude"])))
+        coords_dict = dict(zip(coordinates["name"], zip(coordinates["lat"], coordinates["lon"])))
 
         def select_next_node(visited, current):
             probabilities = []
@@ -81,7 +81,7 @@ if uploaded_file and coord_file:
         best_named_path = [nodes[i] for i in best_path]
         st.success("✅ Best Path Found:")
         st.write(" → ".join(best_named_path))
-        st.write(f"📏 Total Distance: {round(best_cost, 3)} km")
+        st.write(f"Total Distance: {round(best_cost, 3)} km")
 
         # Extract coordinates for best path
         path_coords = [coords_dict[name] for name in best_named_path]
