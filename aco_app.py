@@ -1,55 +1,41 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import folium
-from streamlit_folium import st_folium
+import pydeck as pdk
 
-# --- Streamlit UI Setup ---
-st.set_page_config(layout="wide")
-st.title("📍 Campus Navigation Optimizer using ACO and Real Map")
+# --- ACO PARAMETERS ---
+st.title("📍 Campus Navigation Optimizer using ACO")
 
-# --- Load CSVs with caching ---
-@st.cache_data
-def load_csv(file):
-    return pd.read_csv(file)
-
-# --- Upload inputs ---
-uploaded_file = st.file_uploader("Upload Distance Matrix CSV (Location names as headers/index)", type=["csv"])
-coord_file = st.file_uploader("Upload Coordinates CSV (name, lat, lon)", type=["csv"])
+# Upload CSV files
+uploaded_file = st.file_uploader("Upload Distance Matrix CSV (in km)", type=["csv"])
+coord_file = st.file_uploader("Upload Coordinates CSV (Building, Latitude, Longitude)", type=["csv"])
 
 if uploaded_file and coord_file:
-    distance_matrix = load_csv(uploaded_file)
-    coordinates = load_csv(coord_file)
+    distance_matrix = pd.read_csv(uploaded_file, index_col=0)
+    coordinates = pd.read_csv(coord_file)
 
-    # --- Clean column/index whitespace and make sure names are string ---
-    distance_matrix.columns = distance_matrix.columns.map(str).str.strip()
-    distance_matrix.index = distance_matrix.index.map(str).str.strip()
-    coordinates.columns = coordinates.columns.map(str).str.strip()
-    coordinates["name"] = coordinates["name"].astype(str).str.strip()
-
-    # --- Extract nodes ---
     nodes = list(distance_matrix.index)
     n_nodes = len(nodes)
 
-    st.success(f"✅ Loaded {n_nodes} locations")
+    st.success(f"Loaded distance matrix with {n_nodes} buildings.")
 
-    # --- User input for ACO ---
-    start_node = st.selectbox("Start Location", nodes, index=0)
-    end_node = st.selectbox("End Location", nodes, index=1)
+    # User input for ACO
+    start_node = st.selectbox("Start from", nodes, index=0)
+    end_node = st.selectbox("End at", nodes, index=1)
     n_ants = st.slider("Number of Ants", 5, 50, 10)
     n_iterations = st.slider("Number of Iterations", 10, 100, 50)
     alpha = st.slider("Alpha (pheromone importance)", 0.1, 5.0, 1.0)
     beta = st.slider("Beta (heuristic importance)", 0.1, 5.0, 2.0)
     evaporation = st.slider("Pheromone evaporation rate", 0.0, 1.0, 0.5)
 
-    if st.button("🚀 Run ACO Optimization"):
+    if st.button("Run ACO Optimization"):
         dist = distance_matrix.values
         pheromone = np.ones((n_nodes, n_nodes))
         best_cost = float("inf")
         best_path = []
 
-        # Map coordinates by name
-        coords_dict = dict(zip(coordinates["name"], zip(coordinates["lat"], coordinates["lon"])))
+        # Coordinate lookup dictionary
+        coords_dict = dict(zip(coordinates["Building"], zip(coordinates["Latitude"], coordinates["Longitude"])))
 
         def select_next_node(visited, current):
             probabilities = []
@@ -64,16 +50,16 @@ if uploaded_file and coord_file:
             probabilities = [p / total if total > 0 else 0 for p in probabilities]
             return np.random.choice(range(n_nodes), p=probabilities)
 
-        for _ in range(n_iterations):
+        for iteration in range(n_iterations):
             all_paths = []
             all_costs = []
-            for _ in range(n_ants):
+            for ant in range(n_ants):
                 start_index = nodes.index(start_node)
                 end_index = nodes.index(end_node)
                 path = [start_index]
                 while path[-1] != end_index:
                     next_node = select_next_node(path, path[-1])
-                    if next_node in path:
+                    if next_node in path:  # avoid loops
                         break
                     path.append(next_node)
                 if path[-1] != end_index:
@@ -81,6 +67,7 @@ if uploaded_file and coord_file:
                 cost = sum(dist[path[i]][path[i + 1]] for i in range(len(path) - 1))
                 all_paths.append(path)
                 all_costs.append(cost)
+
                 if cost < best_cost:
                     best_cost = cost
                     best_path = path
@@ -92,31 +79,54 @@ if uploaded_file and coord_file:
                     pheromone[path[i]][path[i + 1]] += 1.0 / cost
 
         best_named_path = [nodes[i] for i in best_path]
+        st.success("✅ Best Path Found:")
+        st.write(" → ".join(best_named_path))
+        st.write(f"📏 Total Distance: {round(best_cost, 3)} km")
 
-        if not best_named_path:
-            st.error("❌ No valid path found. Try different start/end or increase iterations.")
-            st.stop()
+        # Extract coordinates for best path
+        path_coords = [coords_dict[name] for name in best_named_path]
 
-        st.success("✅ Best Route Found:")
-        st.markdown(" → ".join(best_named_path))
-        st.markdown(f"**Total Distance:** `{round(best_cost, 3)} km`")
+        # Data for lines
+        line_data = pd.DataFrame({
+            "from_lat": [path_coords[i][0] for i in range(len(path_coords)-1)],
+            "from_lon": [path_coords[i][1] for i in range(len(path_coords)-1)],
+            "to_lat": [path_coords[i+1][0] for i in range(len(path_coords)-1)],
+            "to_lon": [path_coords[i+1][1] for i in range(len(path_coords)-1)],
+        })
 
-        # --- Display on map ---
-        try:
-            path_coords = [coords_dict[name] for name in best_named_path]
-            start_lat, start_lon = path_coords[0]
+        # Data for markers
+        marker_data = pd.DataFrame([
+            {"lat": lat, "lon": lon, "name": name} 
+            for name, (lat, lon) in coords_dict.items()
+        ])
 
-            m = folium.Map(location=[start_lat, start_lon], zoom_start=17)
+        # Layers for path and markers
+        line_layer = pdk.Layer(
+            "LineLayer",
+            data=line_data,
+            get_source_position='[from_lon, from_lat]',
+            get_target_position='[to_lon, to_lat]',
+            get_width=4,
+            get_color=[255, 0, 0],
+            pickable=True
+        )
 
-            folium.Marker(location=path_coords[0], popup="Start", icon=folium.Icon(color="green")).add_to(m)
-            folium.Marker(location=path_coords[-1], popup="End", icon=folium.Icon(color="red")).add_to(m)
+        marker_layer = pdk.Layer(
+            "ScatterplotLayer",
+            data=marker_data,
+            get_position='[lon, lat]',
+            get_radius=6,
+            get_fill_color=[0, 0, 255],
+            pickable=True
+        )
 
-            folium.PolyLine(path_coords, color="blue", weight=5, tooltip="Optimized Path").add_to(m)
+        # Center view
+        mid_lat, mid_lon = path_coords[0]
 
-            for name, (lat, lon) in coords_dict.items():
-                folium.CircleMarker(location=(lat, lon), radius=4, color="gray", fill=True, fill_opacity=0.5, popup=name).add_to(m)
-
-            st_folium(m, width=900, height=550)
-
-        except Exception as e:
-            st.error(f"⚠️ Map Error: {e}")
+        # Show map
+        st.pydeck_chart(pdk.Deck(
+            map_style='mapbox://styles/mapbox/light-v9',
+            initial_view_state=pdk.ViewState(latitude=mid_lat, longitude=mid_lon, zoom=17),
+            layers=[line_layer, marker_layer],
+            tooltip={"text": "{name}"}
+        ))
