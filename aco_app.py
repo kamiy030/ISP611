@@ -44,7 +44,7 @@ if uploaded_file and coord_file:
         best_cost = float("inf")
         best_path = []
 
-        coords_dict = dict(zip(coordinates["Building"], zip(coordinates["Latitude"], coordinates["Longitude"])))
+        coords_dict = dict(zip(coordinates["name"], zip(coordinates["lat"], coordinates["lon"])))
 
         def select_next_node(visited, current):
             probabilities = []
