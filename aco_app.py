@@ -92,7 +92,7 @@ if uploaded_file and coord_file:
                 for i in range(len(path) - 1):
                     pheromone[path[i]][path[i + 1]] += 1.0 / cost
 
-        best_named_path = [str(nodes[i]) for i in best_path]
+        best_named_path = [nodes[i] for i in best_path]
         st.success("✅ Best Route Found:")
         st.markdown(" → ".join(best_named_path))
         st.markdown(f"**Total Distance:** `{round(best_cost, 3)} km`")
