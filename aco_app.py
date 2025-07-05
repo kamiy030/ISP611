@@ -3,7 +3,14 @@ import pandas as pd
 import numpy as np
 import pydeck as pdk
 
-pdk.settings.mapbox_api_key = st.secrets["mapbox"]["token"]
+# DEBUG: Try loading Mapbox token
+try:
+    token = st.secrets["mapbox"]["token"]
+    st.write("✅ Mapbox token loaded:", token[:10] + "…")
+    pdk.settings.mapbox_api_key = token
+except Exception as e:
+    st.error("❌ Mapbox token not found or invalid.")
+    st.exception(e)
 
 # --- Load Predefined Files ---
 @st.cache_data
