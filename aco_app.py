@@ -56,7 +56,7 @@ def run_aco(distance_matrix, nodes, start_node, end_node, n_ants, n_iterations, 
 
 # --- UI ---
 st.set_page_config(layout="wide")
-st.title("📍 UiTM Shah Alam Campus Navigation Optimizer (ACO)")
+st.title("📍 UiTM Shah Alam Navigation Optimizer")
 
 # Load
 distance_matrix, coords_dict, node_list = load_data()
@@ -71,7 +71,7 @@ with st.expander("⚙️ ACO Parameters"):
     beta = st.slider("Beta (Heuristic Influence)", 0.1, 5.0, 2.0)
     evaporation = st.slider("Evaporation Rate", 0.0, 1.0, 0.5)
 
-if st.button("🚀 Find Best Path"):
+if st.button("Find Path"):
     best_path, best_cost = run_aco(distance_matrix, node_list, start_node, end_node,
                                    n_ants, n_iterations, alpha, beta, evaporation)
 
