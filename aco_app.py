@@ -113,7 +113,8 @@ if st.button("🚀 Find Best Path"):
         get_position='[lon, lat]', get_text='name', get_size=16, get_color=[0, 0, 0])
 
     mid_lat, mid_lon = path_coords[0]
-    st.write("🧭 Map center (mid_lat, mid_lon):", mid_lat, mid_lon)
+    st.write("📏 Line path count:", len(line_data))
+    st.write("📍 Marker count:", len(marker_data))
 
     st.pydeck_chart(pdk.Deck(
         map_style="mapbox://styles/mapbox/streets-v12",
