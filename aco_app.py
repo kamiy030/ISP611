@@ -3,8 +3,6 @@ import pandas as pd
 import numpy as np
 import pydeck as pdk
 
-st.success(f"🔑 Using Mapbox token: {st.secrets['mapbox']['token'][:15]}...")
-
 pdk.settings.mapbox_api_key = st.secrets["mapbox"]["token"]
 
 # --- Load Predefined Files ---
@@ -109,8 +107,12 @@ if st.button("🚀 Find Best Path"):
 
     mid_lat, mid_lon = path_coords[0]
     st.pydeck_chart(pdk.Deck(
-        map_style="mapbox://styles/mapbox/outdoors-v12",
-        initial_view_state=pdk.ViewState(latitude=mid_lat, longitude=mid_lon, zoom=17),
-        layers=[line_layer, dot_layer, text_layer],
-        tooltip={"text": "{name}"}
-    ))
+    map_style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+    initial_view_state=pdk.ViewState(
+        latitude=3.0730,
+        longitude=101.5055,
+        zoom=16
+    ),
+    layers=[...]
+))
+
