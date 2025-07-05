@@ -4,6 +4,8 @@ import pandas as pd
 
 pdk.settings.mapbox_api_key = st.secrets["mapbox"]["token"]
 
+st.success(f"🔑 Using Mapbox token: {st.secrets['mapbox']['token'][:15]}...")
+
 data = pd.DataFrame({
     "name": ["UiTM"],
     "lat": [3.0730],
