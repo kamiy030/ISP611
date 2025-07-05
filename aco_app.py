@@ -4,7 +4,6 @@ import numpy as np
 import pydeck as pdk
 
 pdk.settings.mapbox_api_key = st.secrets["mapbox"]["token"]
-st.write("🔑 Mapbox Token:", st.secrets["mapbox"]["token"][:10] + "…")
 
 # --- Load Predefined Files ---
 @st.cache_data
@@ -108,7 +107,7 @@ if st.button("🚀 Find Best Path"):
 
     mid_lat, mid_lon = path_coords[0]
     st.pydeck_chart(pdk.Deck(
-        map_style="mapbox://styles/mapbox/outdoors-v12",
+        map_style="mapbox://styles/mapbox/streets-v12",
         initial_view_state=pdk.ViewState(latitude=mid_lat, longitude=mid_lon, zoom=17),
         layers=[line_layer, dot_layer, text_layer],
         tooltip={"text": "{name}"}
