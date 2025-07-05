@@ -3,14 +3,7 @@ import pandas as pd
 import numpy as np
 import pydeck as pdk
 
-# DEBUG: Try loading Mapbox token
-try:
-    token = st.secrets["mapbox"]["token"]
-    st.write("✅ Mapbox token loaded:", token[:10] + "…")
-    pdk.settings.mapbox_api_key = token
-except Exception as e:
-    st.error("❌ Mapbox token not found or invalid.")
-    st.exception(e)
+pdk.settings.mapbox_api_key = "pk.eyJ1IjoiZGVtb3VzZXIiLCJhIjoiY2t2Z3ZmeXlzMDg4YjJwbWk3Z3M4YTNzYyJ9.9vX0v3dx_3jgy_lxMgYuwA"
 
 # --- Load Predefined Files ---
 @st.cache_data
@@ -113,8 +106,6 @@ if st.button("🚀 Find Best Path"):
         get_position='[lon, lat]', get_text='name', get_size=16, get_color=[0, 0, 0])
 
     mid_lat, mid_lon = path_coords[0]
-    st.write("📏 Line path count:", len(line_data))
-    st.write("📍 Marker count:", len(marker_data))
 
     st.pydeck_chart(pdk.Deck(
         map_style="mapbox://styles/mapbox/streets-v12",
