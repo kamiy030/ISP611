@@ -3,6 +3,8 @@ import pandas as pd
 import numpy as np
 import pydeck as pdk
 
+pdk.settings.mapbox_api_key = "pk.eyJ1Ijoia2FtaXkiLCJhIjoiY21jcWRlZnVhMGVwbjJpczQ2azd4amVycCJ9.JmYnjbZDlNx_xSL0wHx06Q"
+
 # --- Load Predefined Files ---
 @st.cache_data
 def load_data():
