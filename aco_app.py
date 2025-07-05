@@ -64,7 +64,7 @@ distance_matrix, coords_dict, node_list = load_data()
 start_node = st.selectbox("🏁 Start Location", node_list, index=0)
 end_node = st.selectbox("🏁 End Location", node_list, index=1)
 
-with st.expander("⚙️ ACO Parameters"):
+with st.expander("⚙️ ACO Parameters Settings"):
     n_ants = st.slider("Number of Ants", 5, 50, 10)
     n_iterations = st.slider("Iterations", 10, 200, 50)
     alpha = st.slider("Alpha (Pheromone Influence)", 0.1, 5.0, 1.0)
