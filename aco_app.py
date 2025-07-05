@@ -3,8 +3,6 @@ import pandas as pd
 import numpy as np
 import pydeck as pdk
 
-pdk.settings.mapbox_api_key = st.secrets["mapbox"]["token"]
-
 # --- Load Predefined Files ---
 @st.cache_data
 def load_data():
