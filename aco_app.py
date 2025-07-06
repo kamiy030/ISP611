@@ -6,7 +6,7 @@ import pydeck as pdk
 # --- Load Predefined Files ---
 @st.cache_data
 def load_data():
-    dist_matrix = pd.read_csv("uitm_walkable_distance_cleaned.csv", index_col=0)
+    dist_matrix = pd.read_csv("uitm_distance_matrix_km.csv", index_col=0)
     coords = pd.read_csv("uitm_named_buildings.csv")
     coords_dict = dict(zip(coords["name"], zip(coords["lat"], coords["lon"])))
     return dist_matrix, coords_dict, list(dist_matrix.index)
