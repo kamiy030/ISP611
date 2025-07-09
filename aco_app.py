@@ -90,9 +90,9 @@ with st.expander("⚙️ ACO Parameters Settings"):
     beta = st.slider("Beta (Heuristic Influence)", 0.1, 5.0, 2.0)
     evaporation = st.slider("Evaporation Rate", 0.0, 1.0, 0.5)
     pheromone_constant = st.slider("Pheromone Constant (Q)", 10, 500, 100)
-    seed_option = st.checkbox("Fix Random Seed for Stable Output", value=True)
-    early_stop = st.checkbox("Enable Early Stopping if No Improvement", value=True)
-    run_multiple = st.slider("Run ACO N Times (for Stable Best Path)", 1, 10, 1)
+    run_multiple = st.slider("Run ACO N Times (Stable Best Path)", 1, 10, 1)
+    seed_option = st.checkbox("Fix random seed (Stable output)", value=True)
+    early_stop = st.checkbox("Enable early stopping if no improvement", value=True)
 
 if st.button("Find Path"):
     best_overall_path = None
