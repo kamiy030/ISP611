@@ -12,7 +12,7 @@ def load_data():
     return dist_matrix, coords_dict, list(dist_matrix.index)
 
 # --- ACO Algorithm ---
-def run_aco(distance_matrix, nodes, start_node, end_node, n_ants, n_iterations, alpha, beta, evaporation):
+def run_aco(distance_matrix, nodes, start_node, end_node, n_ants, n_iterations, alpha, beta, evaporation, pheromone_constant):
     n_nodes = len(nodes)
     dist = distance_matrix.values
     pheromone = np.ones((n_nodes, n_nodes))
@@ -50,7 +50,7 @@ def run_aco(distance_matrix, nodes, start_node, end_node, n_ants, n_iterations, 
                 best_path = path
         pheromone *= (1 - evaporation)
         for i in range(len(best_path) - 1):
-            pheromone[best_path[i]][best_path[i + 1]] += 1.0 / best_cost
+           pheromone[best_path[i]][best_path[i + 1]] += pheromone_constant / best_cost
 
     return [nodes[i] for i in best_path], round(best_cost, 3)
 
@@ -70,10 +70,11 @@ with st.expander("⚙️ ACO Parameters Settings"):
     alpha = st.slider("Alpha (Pheromone Influence)", 0.1, 5.0, 1.0)
     beta = st.slider("Beta (Heuristic Influence)", 0.1, 5.0, 2.0)
     evaporation = st.slider("Evaporation Rate", 0.0, 1.0, 0.5)
+    pheromone_constant = st.slider("Pheromone Constant (Q)", 10, 500, 100)
 
 if st.button("Find Path"):
     best_path, best_cost = run_aco(distance_matrix, node_list, start_node, end_node,
-                                   n_ants, n_iterations, alpha, beta, evaporation)
+    n_ants, n_iterations, alpha, beta, evaporation, pheromone_constant)
 
     st.success(f"✅ Best Path Found: { ' → '.join(best_path) }")
     st.markdown(f"**Total Distance:** `{best_cost} km`")
